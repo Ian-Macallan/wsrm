@@ -82,7 +82,7 @@ jobs:
         # include a `upload_url`. See this blog post for more info:
         # https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ github.workspace }}/Release/wsrm.exe
+        asset_path: ${{ github.workspace }}/Release/wsrm.v143.exe
         asset_name: wsrm.exe
         asset_content_type: application/zip
  
@@ -97,7 +97,7 @@ jobs:
         # include a `upload_url`. See this blog post for more info:
         # https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ github.workspace }}/x64/Release/wsrm.exe
+        asset_path: ${{ github.workspace }}/x64/Release/wsrm.v143.exe
         asset_name: wsrm64.exe
         asset_content_type: application/zip
  

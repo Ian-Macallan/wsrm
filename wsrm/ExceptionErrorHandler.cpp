@@ -1759,7 +1759,7 @@ char * CExceptErrorHandler::EEHFormatOutputValue(	char * pszCurrBuffer,
         {
             if ( ! IsBadStringPtrA( *(PSTR*)pAddress, 32) )
             {
-                sprintf_s (	pszCurrBuffer + strlen(pszCurrBuffer), cbCurrBuffer - strlen(pszCurrBuffer), " = \"%.31s\"", *(PDWORD)pAddress );
+                sprintf_s (	pszCurrBuffer + strlen(pszCurrBuffer), cbCurrBuffer - strlen(pszCurrBuffer), " = \"%.31s\"", (LPSTR) ( *(PDWORD)pAddress )  );
             }
             else
 			{
