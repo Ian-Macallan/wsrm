@@ -1548,7 +1548,7 @@ bool CExceptErrorHandler::EEHFormatSymbolValue ( PSYMBOL_INFO pSym, STACKFRAME *
 	if ( pSym != NULL )
 	{
 #ifdef _M_IX86
-		sprintf_s ( pszBuffer + strlen(pszBuffer), cbBuffer - strlen(pszBuffer), "(%08X ", pSym->Address );
+		sprintf_s ( pszBuffer + strlen(pszBuffer), cbBuffer - strlen(pszBuffer), "(%08X ", (long) pSym->Address );
 #endif 
 
 #ifdef _M_X64
@@ -1759,32 +1759,27 @@ char * CExceptErrorHandler::EEHFormatOutputValue(	char * pszCurrBuffer,
         {
             if ( ! IsBadStringPtrA( *(PSTR*)pAddress, 32) )
             {
-                sprintf_s (	pszCurrBuffer + strlen(pszCurrBuffer), cbCurrBuffer - strlen(pszCurrBuffer), 
-								" = \"%.31s\"", *(PDWORD)pAddress );
+                sprintf_s (	pszCurrBuffer + strlen(pszCurrBuffer), cbCurrBuffer - strlen(pszCurrBuffer), " = \"%.31s\"", *(PDWORD)pAddress );
             }
             else
 			{
-                sprintf_s (	pszCurrBuffer + strlen(pszCurrBuffer), cbCurrBuffer - strlen(pszCurrBuffer), 
-								" = <%X>", *(PDWORD)pAddress );
+                sprintf_s (	pszCurrBuffer + strlen(pszCurrBuffer), cbCurrBuffer - strlen(pszCurrBuffer), " = <%X>", *(PDWORD)pAddress );
 			}
         }
         else
 		{
-            sprintf_s (	pszCurrBuffer + strlen(pszCurrBuffer), cbCurrBuffer - strlen(pszCurrBuffer), 
-							" = <%X>", *(PDWORD)pAddress);
+            sprintf_s (	pszCurrBuffer + strlen(pszCurrBuffer), cbCurrBuffer - strlen(pszCurrBuffer), " = <%X>", *(PDWORD)pAddress);
 		}
     }
     else if ( length == 8 )
     {
         if ( basicType == btFloat )
         {
-            sprintf_s (	pszCurrBuffer + strlen(pszCurrBuffer), cbCurrBuffer - strlen(pszCurrBuffer), 
-							" = <%lf>", *(double *)pAddress );
+            sprintf_s (	pszCurrBuffer + strlen(pszCurrBuffer), cbCurrBuffer - strlen(pszCurrBuffer), " = <%lf>", *(double *)pAddress );
         }
         else
 		{
-            sprintf_s (	pszCurrBuffer + strlen(pszCurrBuffer), cbCurrBuffer - strlen(pszCurrBuffer), 
-							" = <%I64X>", *(DWORD64*)pAddress );
+            sprintf_s (	pszCurrBuffer + strlen(pszCurrBuffer), cbCurrBuffer - strlen(pszCurrBuffer), " = <%I64X>", *(DWORD64*)pAddress );
 		}
     }
 

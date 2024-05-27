@@ -331,9 +331,15 @@ bool FillOneDisk ( const char *pDisk )
 			asctime_s ( szDate, &tmTime );
 			fprintf ( hFile, "Fill Disk for           : %s\n", pDisk );
 			fprintf ( hFile, "Executed at             : %s\n", szDate );
+#ifdef UNICODE
+			fwprintf ( hFile, L"Program                 : %s\n", PROGRAM_NAME_P );
+			fwprintf ( hFile, L"Date                    : %s\n", PROGRAM_DATE_F );
+			fwprintf ( hFile, L"Version                 : %s\n", PROGRAM_VERSION );
+#else
 			fprintf ( hFile, "Program                 : %s\n", PROGRAM_NAME_P );
 			fprintf ( hFile, "Date                    : %s\n", PROGRAM_DATE_F );
 			fprintf ( hFile, "Version                 : %s\n", PROGRAM_VERSION );
+#endif
 			fprintf ( hFile, "Sector Per Cluster      : %ld\n", (unsigned long) dwSectorPerCluster );
 			fprintf ( hFile, "Byte Per Sector         : %ld\n", (unsigned long) dwBytePerSector );
 			fprintf ( hFile, "Number Of Free Cluster  : %ld\n", (unsigned long) dwNumberOfFreeCluster );
