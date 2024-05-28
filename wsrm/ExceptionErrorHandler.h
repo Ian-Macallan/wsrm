@@ -1,30 +1,30 @@
 /*
  ************************************************************************************
  *
- *		File:			ExceptionErrorHandler.h
- *		Class:			CExceptErrorHandler
+ *      File:           ExceptionErrorHandler.h
+ *      Class:          CExceptErrorHandler
  *
  ************************************************************************************
- *		Description:
+ *      Description:
  *
  ************************************************************************************
- *		Notes:
+ *      Notes:
  *
- *		20/12/2008
+ *      20/12/2008
  *
  ************************************************************************************
  *
- *		E/Mail: ian.macallan@gmail.com
- *		(c) 2003 - 2023 / Macallan 
- *		
+ *      E/Mail: ian.macallan@gmail.com
+ *      (c) 2003 - 2023 / Macallan
+ *      
  ************************************************************************************
  *
  *
- *		Matt Pietrek
- *		MSDN Magazine, 2002
+ *      Matt Pietrek
+ *      MSDN Magazine, 2002
  *
- *		Litely adapted by Macallan.
- *		FILE: MacallanExceptionHandler.h
+ *      Litely adapted by Macallan.
+ *      FILE: MacallanExceptionHandler.h
  *
  ************************************************************************************
  */
@@ -64,7 +64,7 @@ enum BasicType  // Stolen from CVCONST.H in the DIA 2.0 SDK
 //
 //====================================================================================
 //
-//		Global Function Pointers
+//      Global Function Pointers
 //
 //====================================================================================
 
@@ -140,162 +140,162 @@ typedef BOOL ( __stdcall * typeStackWalk )(
     );
 
 typedef BOOL ( __stdcall * typeStackWalk64 )(
-    DWORD								MachineType,
-    HANDLE								hProcess,
-    HANDLE								hThread,
-    LPSTACKFRAME64						StackFrame,
-    PVOID								ContextRecord,
-    PREAD_PROCESS_MEMORY_ROUTINE		ReadMemoryRoutine,
-    PFUNCTION_TABLE_ACCESS_ROUTINE		FunctionTableAccessRoutine,
-    PGET_MODULE_BASE_ROUTINE			GetModuleBaseRoutine,
-    PTRANSLATE_ADDRESS_ROUTINE			TranslateAddress
+    DWORD                               MachineType,
+    HANDLE                              hProcess,
+    HANDLE                              hThread,
+    LPSTACKFRAME64                      StackFrame,
+    PVOID                               ContextRecord,
+    PREAD_PROCESS_MEMORY_ROUTINE        ReadMemoryRoutine,
+    PFUNCTION_TABLE_ACCESS_ROUTINE      FunctionTableAccessRoutine,
+    PGET_MODULE_BASE_ROUTINE            GetModuleBaseRoutine,
+    PTRANSLATE_ADDRESS_ROUTINE          TranslateAddress
     );
 
 typedef PVOID ( __stdcall * typeSymFunctionTableAccess )(
-    HANDLE		hProcess,
-    DWORD		AddrBase
+    HANDLE      hProcess,
+    DWORD       AddrBase
     );
 
 typedef PVOID ( __stdcall * typeSymFunctionTableAccess64 )(
-    HANDLE		hProcess,
-    DWORD64		AddrBase
+    HANDLE      hProcess,
+    DWORD64     AddrBase
     );
 
 typedef DWORD ( __stdcall * typeSymGetModuleBase )(
-    IN  HANDLE				hProcess,
-    IN  DWORD				dwAddr
+    IN  HANDLE              hProcess,
+    IN  DWORD               dwAddr
     );
 
 typedef DWORD64  ( __stdcall * typeSymGetModuleBase64 )(
-    IN  HANDLE			hProcess,
-    IN  DWORD64			dwAddr
+    IN  HANDLE          hProcess,
+    IN  DWORD64         dwAddr
     );
 
 
 typedef USHORT ( __stdcall * typeRtlCaptureStackBackTrace )(
-	IN ULONG FramesToSkip,
-	IN ULONG FramesToCapture,
-	PVOID *BackTrace,
-	PULONG BackTraceHash
-	);
+    IN ULONG FramesToSkip,
+    IN ULONG FramesToCapture,
+    PVOID *BackTrace,
+    PULONG BackTraceHash
+    );
 
 //
 //=============================================================================
 //
-//	The Macallan Exception Handler.
+//  The Macallan Exception Handler.
 //
 //=============================================================================
 
-//!	MacallanExceptionHandler
+//! MacallanExceptionHandler
 class CExceptErrorHandler
 {
     public:
+
+        CExceptErrorHandler ( );
+        virtual ~CExceptErrorHandler( );
     
-		CExceptErrorHandler ( );
-		virtual ~CExceptErrorHandler( );
-	    
-		static void EEHSetLogFileName( char *pszLogFileName, size_t cbSize );
-		static char * EEHGetFilename(char * pName);
-		static void EEHGetDirectory(char * pName, size_t iSize);
-		static void EEHGetTempDirectory(char * pName, size_t iSize);
+        static void EEHSetLogFileName( char *pszLogFileName, size_t cbSize );
+        static char * EEHGetFilename(char * pName);
+        static void EEHGetDirectory(char * pName, size_t iSize);
+        static void EEHGetTempDirectory(char * pName, size_t iSize);
 
-		// entry point where control comes on an unhandled exception
-		static LONG WINAPI EEHMacallanUnhandledExceptionFilter( PEXCEPTION_POINTERS pExceptionInfo );
+        // entry point where control comes on an unhandled exception
+        static LONG WINAPI EEHMacallanUnhandledExceptionFilter( PEXCEPTION_POINTERS pExceptionInfo );
 
-		static void EEHInvalidParameterHandler (	const wchar_t * expression, const wchar_t * function, 
-													const wchar_t * file, unsigned int line, uintptr_t pReserved );
+        static void EEHInvalidParameterHandler (    const wchar_t * expression, const wchar_t * function,
+                                                    const wchar_t * file, unsigned int line, uintptr_t pReserved );
 
     private:
 
-		// where report info is extracted and generated 
-		static void EEHGenerateExceptionReport( PEXCEPTION_POINTERS pExceptionInfo );
+        // where report info is extracted and generated
+        static void EEHGenerateExceptionReport( PEXCEPTION_POINTERS pExceptionInfo );
 
-		// Helper functions
-		static char * EEHGetExceptionString ( DWORD dwCode );
-		static BOOL EEHGetLogicalAddress (	PVOID addr, char * szModule, DWORD len,
-											DWORD& section, DWORD& offset );
+        // Helper functions
+        static char * EEHGetExceptionString ( DWORD dwCode );
+        static BOOL EEHGetLogicalAddress (  PVOID addr, char * szModule, DWORD len,
+                                            DWORD& section, DWORD& offset );
 
-		static void EEHWriteStackDetails( PCONTEXT pContext, bool bWriteVariables );
+        static void EEHWriteStackDetails( PCONTEXT pContext, bool bWriteVariables );
 
-		static BOOL CALLBACK EEHEnumerateSymbolsCallback ( PSYMBOL_INFO, ULONG, PVOID );
+        static BOOL CALLBACK EEHEnumerateSymbolsCallback ( PSYMBOL_INFO, ULONG, PVOID );
 
-		static bool EEHFormatSymbolValue( PSYMBOL_INFO, STACKFRAME *, char * pszBuffer, unsigned cbBuffer );
+        static bool EEHFormatSymbolValue( PSYMBOL_INFO, STACKFRAME *, char * pszBuffer, unsigned cbBuffer );
 
-		static char * EEHDumpTypeIndex ( char *, size_t, DWORD64, DWORD, unsigned, DWORD_PTR, bool & );
+        static char * EEHDumpTypeIndex ( char *, size_t, DWORD64, DWORD, unsigned, DWORD_PTR, bool & );
 
-		static char * EEHFormatOutputValue (	char * pszCurrBuffer, size_t cbCurrBuffer, 
-												BasicType basicType, DWORD64 length,
-												PVOID pAddress );
-	    
-		static BasicType EEHGetBasicType ( DWORD typeIndex, DWORD64 modBase );
+        static char * EEHFormatOutputValue (    char * pszCurrBuffer, size_t cbCurrBuffer,
+                                                BasicType basicType, DWORD64 length,
+                                                PVOID pAddress );
+    
+        static BasicType EEHGetBasicType ( DWORD typeIndex, DWORD64 modBase );
 
-		static BOOL EEHEnableCrashingOnCrashes ();
+        static BOOL EEHEnableCrashingOnCrashes ();
 
-		static size_t __cdecl EEHPrintCrash ( const char * format, ... );
-		static size_t __cdecl EEHPrintDebug ( const char * format, ... );
+        static size_t __cdecl EEHPrintCrash ( const char * format, ... );
+        static size_t __cdecl EEHPrintDebug ( const char * format, ... );
 
-		static void EEHWriteStackTrace ();
+        static void EEHWriteStackTrace ();
 
-		static const char *EEHGetLastErrorText ( );
+        static const char *EEHGetLastErrorText ( );
 
-		static void EEHInitializeSymbols();
+        static void EEHInitializeSymbols();
 
-		static void EEHSetInvalidParameterHandler ();
+        static void EEHSetInvalidParameterHandler ();
 
-		static void EEHOpenDebugFile();
-		static void EEHCloseDebugFile();
+        static void EEHOpenDebugFile();
+        static void EEHCloseDebugFile();
 
-		static void EEHOpenCrashFile();
-		static void EEHCloseCrashFile();
+        static void EEHOpenCrashFile();
+        static void EEHCloseCrashFile();
 
-		//
-		//		External functions
-		static	typeSymInitialize				pfSymInitialize;
-		static	typeSymGetTypeInfo				pfSymGetTypeInfo;
-		static	typeSymSetOptions				pfSymSetOptions;
-		static	typeSymGetOptions				pfSymGetOptions;
-		static	typeSymCleanup					pfSymCleanup;
-		static	typeSymEnumSymbols				pfSymEnumSymbols;
-		static	typeSymSetContext				pfSymSetContext;
-		static	typeSymFromAddr					pfSymFromAddr;
-		static	typeSymGetLineFromAddr			pfSymGetLineFromAddr;
-		static	typeSymGetLineFromAddr64		pfSymGetLineFromAddr64;
-		static	typeStackWalk					pfStackWalk;
-		static	typeStackWalk64					pfStackWalk64;
-		static	typeSymFunctionTableAccess		pfSymFunctionTableAccess;
-		static	typeSymFunctionTableAccess64	pfSymFunctionTableAccess64;
-		static	typeSymGetModuleBase			pfSymGetModuleBase;
-		static	typeSymGetModuleBase64			pfSymGetModuleBase64;
+        //
+        //      External functions
+        static  typeSymInitialize               pfSymInitialize;
+        static  typeSymGetTypeInfo              pfSymGetTypeInfo;
+        static  typeSymSetOptions               pfSymSetOptions;
+        static  typeSymGetOptions               pfSymGetOptions;
+        static  typeSymCleanup                  pfSymCleanup;
+        static  typeSymEnumSymbols              pfSymEnumSymbols;
+        static  typeSymSetContext               pfSymSetContext;
+        static  typeSymFromAddr                 pfSymFromAddr;
+        static  typeSymGetLineFromAddr          pfSymGetLineFromAddr;
+        static  typeSymGetLineFromAddr64        pfSymGetLineFromAddr64;
+        static  typeStackWalk                   pfStackWalk;
+        static  typeStackWalk64                 pfStackWalk64;
+        static  typeSymFunctionTableAccess      pfSymFunctionTableAccess;
+        static  typeSymFunctionTableAccess64    pfSymFunctionTableAccess64;
+        static  typeSymGetModuleBase            pfSymGetModuleBase;
+        static  typeSymGetModuleBase64          pfSymGetModuleBase64;
 
-		static	typeRtlCaptureStackBackTrace	pfRtlCaptureStackBackTrace;
+        static  typeRtlCaptureStackBackTrace    pfRtlCaptureStackBackTrace;
 
-		// Variables used by the class
-		static	char							m_szDebugFileName[MAX_PATH+1];
-		static	char							m_szCrashFileName[MAX_PATH+1];
-		static	char							m_szDirectory[MAX_PATH+1];
-		static	char							m_szSearchPath[MAX_PATH+1];
-		static	char							m_szFilename[MAX_PATH+1];
-		static	char							m_szModule[MAX_PATH+1];
-		static	char							m_szFaultingModule[MAX_PATH+1];
-		static	char							m_szBuffer[MAX_PATH*4+1];
-		static	WCHAR							m_szwBuffer[MAX_PATH*4+1];
-		static	char							m_szSymbolBuffer[MAX_PATH*8+1];
-		static	LPTOP_LEVEL_EXCEPTION_FILTER	m_previousFilter;
-		static	HANDLE							m_hCrashFile;
-		static	HANDLE							m_hDebugFile;
-		static	HANDLE							m_hProcess;
-		static	char							m_szErrorText[MAX_PATH*2+1];
-#define	SYMBOL_NAME_LEN		256
-		static  char							m_SymbolInfo [ sizeof(SYMBOL_INFO) + SYMBOL_NAME_LEN * sizeof( char )];
-		static	SYMBOL_INFO						*m_pSymbolInfo;
-		static _invalid_parameter_handler		m__invalid_parameter_handler;
+        // Variables used by the class
+        static  char                            m_szDebugFileName[MAX_PATH+1];
+        static  char                            m_szCrashFileName[MAX_PATH+1];
+        static  char                            m_szDirectory[MAX_PATH+1];
+        static  char                            m_szSearchPath[MAX_PATH+1];
+        static  char                            m_szFilename[MAX_PATH+1];
+        static  char                            m_szModule[MAX_PATH+1];
+        static  char                            m_szFaultingModule[MAX_PATH+1];
+        static  char                            m_szBuffer[MAX_PATH*4+1];
+        static  WCHAR                           m_szwBuffer[MAX_PATH*4+1];
+        static  char                            m_szSymbolBuffer[MAX_PATH*8+1];
+        static  LPTOP_LEVEL_EXCEPTION_FILTER    m_previousFilter;
+        static  HANDLE                          m_hCrashFile;
+        static  HANDLE                          m_hDebugFile;
+        static  HANDLE                          m_hProcess;
+        static  char                            m_szErrorText[MAX_PATH*2+1];
+#define SYMBOL_NAME_LEN     256
+        static  char                            m_SymbolInfo [ sizeof(SYMBOL_INFO) + SYMBOL_NAME_LEN * sizeof( char )];
+        static  SYMBOL_INFO                     *m_pSymbolInfo;
+        static _invalid_parameter_handler       m__invalid_parameter_handler;
 
 };
 
 #endif // EXCEPTION_ERROR_HANDLER
 
 //
-//	External Functions
+//  External Functions
 extern void InvokeExceptionErrorHandler( );
 extern void SetCrashToStderr( bool toStdErr );
 
@@ -307,15 +307,15 @@ extern void PrintCrashHelpA ( int iWidth, const char *programName, int iArgCount
 
 //
 extern bool InvalidParameterFound;
-extern	_invalid_parameter_handler SetInvalidParameterHandler ( _invalid_parameter_handler newInvalidParameterHandler = NULL );
-extern	void RestoreInvalidParameterHandler ( _invalid_parameter_handler oldInvalidParameterHandler = NULL );
-extern	_invalid_parameter_handler OldInvalidParameterHandler;
+extern  _invalid_parameter_handler SetInvalidParameterHandler ( _invalid_parameter_handler newInvalidParameterHandler = NULL );
+extern  void RestoreInvalidParameterHandler ( _invalid_parameter_handler oldInvalidParameterHandler = NULL );
+extern  _invalid_parameter_handler OldInvalidParameterHandler;
 
 //
 #ifdef UNICODE
-#define	TreatCrashOptions			TreatCrashOptionsW
-#define	PrintCrashHelp				PrintCrashHelpW
+#define TreatCrashOptions           TreatCrashOptionsW
+#define PrintCrashHelp              PrintCrashHelpW
 #else
-#define	TreatCrashOptions			TreatCrashOptionsA
-#define	PrintCrashHelp				PrintCrashHelpA
+#define TreatCrashOptions           TreatCrashOptionsA
+#define PrintCrashHelp              PrintCrashHelpA
 #endif

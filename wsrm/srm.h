@@ -15,7 +15,7 @@ extern int XEMain ( WCHAR cDrive, BOOL bFindDelete, BOOL bDump, int index, WCHAR
 extern BOOL FillNames ( WCHAR *pDrive, int count );
 
 //
-//	Some Macros
-#define _wsizeof(x)			(sizeof(x)/sizeof(WCHAR))
+//  Some Macros
+#define _wsizeof(x)         (sizeof(x)/sizeof(WCHAR))
 
 #endif

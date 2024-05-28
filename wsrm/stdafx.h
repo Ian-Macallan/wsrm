@@ -5,9 +5,9 @@
 
 #pragma once
 
-#ifndef _WIN32_WINNT		// Autorise l'utilisation des fonctionnalités spécifiques à Windows XP ou version ultérieure.                   
-#define _WIN32_WINNT 0x0501	// Attribuez la valeur appropriée à cet élément pour cibler d'autres versions de Windows.
-#endif						
+#ifndef _WIN32_WINNT        // Autorise l'utilisation des fonctionnalités spécifiques à Windows XP ou version ultérieure.
+#define _WIN32_WINNT 0x0501 // Attribuez la valeur appropriée à cet élément pour cibler d'autres versions de Windows.
+#endif                      
 
 #include <stdio.h>
 #include <tchar.h>
