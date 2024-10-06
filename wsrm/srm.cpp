@@ -606,7 +606,11 @@ BOOL readFillFile ( )
 
     //
     //  We will hav to prepend '\\?\'
-    wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+    ZeroMemory ( szPrependFilename, LEN_PATHNAME * sizeof(WCHAR) );
+    if ( wcsncmp ( szFillWithFile, L"\\\\", 2 ) != 0 )
+    {
+        wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+    }
     wcscat_s ( szPrependFilename, LEN_PATHNAME, szFillWithFile );
 
     HANDLE hFile =
@@ -837,7 +841,11 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
         if ( ! bDirectory )
         {
             //  We will hav to prepend '\\?\'
-            wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+            ZeroMemory ( szPrependFilename, LEN_PATHNAME * sizeof(WCHAR) );
+            if ( wcsncmp ( pFullPathname, L"\\\\", 2 ) != 0 )
+            {
+                wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+            }
             wcscat_s ( szPrependFilename, LEN_PATHNAME, pFullPathname );
 
             bDeleted = DeleteFile ( szPrependFilename );
@@ -845,7 +853,11 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
         else
         {
             //  We will hav to prepend '\\?\'
-            wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+            ZeroMemory ( szPrependFilename, LEN_PATHNAME * sizeof(WCHAR) );
+            if ( wcsncmp ( pFullPathname, L"\\\\", 2 ) != 0 )
+            {
+                wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+            }
             wcscat_s ( szPrependFilename, LEN_PATHNAME, pFullPathname );
 
             bDeleted = RemoveDirectory ( szPrependFilename );
@@ -1006,7 +1018,11 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
         if ( ! bDirectory )
         {
             //  We will hav to prepend '\\?\'
-            wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+            ZeroMemory ( szPrependFilename, LEN_PATHNAME * sizeof(WCHAR) );
+            if ( wcsncmp ( pRenamePathname, L"\\\\", 2 ) != 0 )
+            {
+                wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+            }
             wcscat_s ( szPrependFilename, LEN_PATHNAME, pRenamePathname );
 
             bDeleted = DeleteFile ( szPrependFilename );
@@ -1014,7 +1030,11 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
         else
         {
             //  We will hav to prepend '\\?\'
-            wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+            ZeroMemory ( szPrependFilename, LEN_PATHNAME * sizeof(WCHAR) );
+            if ( wcsncmp ( pRenamePathname, L"\\\\", 2 ) != 0 )
+            {
+                wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+            }
             wcscat_s ( szPrependFilename, LEN_PATHNAME, pRenamePathname );
 
             bDeleted = RemoveDirectory ( szPrependFilename );
@@ -1180,7 +1200,11 @@ BOOL writeOverFile(WCHAR *pFullPathname, WIN32_FIND_DATA *pFindFileData )
 
         //
         //  We will hav to prepend '\\?\'
-        wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+        ZeroMemory ( szPrependFilename, LEN_PATHNAME * sizeof(WCHAR) );
+        if ( wcsncmp ( pFullPathname, L"\\\\", 2 ) != 0 )
+        {
+            wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+        }
         wcscat_s ( szPrependFilename, LEN_PATHNAME, pFullPathname );
 
         HANDLE hFile =
