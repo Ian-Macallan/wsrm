@@ -56,7 +56,6 @@ static  WCHAR       LocaleString [ LEN_PATHNAME ];
 #define TIMES_NEW_ROMAN_W   L"Times New Roman"
 
 static WCHAR    szCurrentDirectory [ LEN_PATHNAME ];
-static WCHAR    szPrependFilename [ LEN_PATHNAME ];
 
 static WCHAR    szFillWithFile [ LEN_PATHNAME ];
 static WCHAR    szJpegext [ LEN_PATHNAME ];
@@ -606,15 +605,16 @@ BOOL readFillFile ( )
 
     //
     //  We will hav to prepend '\\?\'
-    ZeroMemory ( szPrependFilename, LEN_PATHNAME * sizeof(WCHAR) );
+    MCAutoWPtr    szPrependFilename ( LEN_PATHNAME );
+
     if ( wcsncmp ( szFillWithFile, L"\\\\", 2 ) != 0 )
     {
-        wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+        wcscpy_s ( szPrependFilename.wptr, LEN_PATHNAME, L"\\\\?\\" );
     }
-    wcscat_s ( szPrependFilename, LEN_PATHNAME, szFillWithFile );
+    wcscat_s ( szPrependFilename.wptr, LEN_PATHNAME, szFillWithFile );
 
     HANDLE hFile =
-        CreateFile ( szPrependFilename, dwDesiredAccess, dwShareMode,
+        CreateFile ( szPrependFilename.wptr, dwDesiredAccess, dwShareMode,
             lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile );
     if ( hFile != INVALID_HANDLE_VALUE )
     {
@@ -841,26 +841,26 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
         if ( ! bDirectory )
         {
             //  We will hav to prepend '\\?\'
-            ZeroMemory ( szPrependFilename, LEN_PATHNAME * sizeof(WCHAR) );
+            MCAutoWPtr    szPrependFilename ( LEN_PATHNAME );
             if ( wcsncmp ( pFullPathname, L"\\\\", 2 ) != 0 )
             {
-                wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+                wcscpy_s ( szPrependFilename.wptr, LEN_PATHNAME, L"\\\\?\\" );
             }
-            wcscat_s ( szPrependFilename, LEN_PATHNAME, pFullPathname );
+            wcscat_s ( szPrependFilename.wptr, LEN_PATHNAME, pFullPathname );
 
-            bDeleted = DeleteFile ( szPrependFilename );
+            bDeleted = DeleteFile ( szPrependFilename.wptr );
         }
         else
         {
             //  We will hav to prepend '\\?\'
-            ZeroMemory ( szPrependFilename, LEN_PATHNAME * sizeof(WCHAR) );
+            MCAutoWPtr    szPrependFilename ( LEN_PATHNAME );
             if ( wcsncmp ( pFullPathname, L"\\\\", 2 ) != 0 )
             {
-                wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+                wcscpy_s ( szPrependFilename.wptr, LEN_PATHNAME, L"\\\\?\\" );
             }
-            wcscat_s ( szPrependFilename, LEN_PATHNAME, pFullPathname );
+            wcscat_s ( szPrependFilename.wptr, LEN_PATHNAME, pFullPathname );
 
-            bDeleted = RemoveDirectory ( szPrependFilename );
+            bDeleted = RemoveDirectory ( szPrependFilename.wptr );
         }
 
         //
@@ -1018,26 +1018,26 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
         if ( ! bDirectory )
         {
             //  We will hav to prepend '\\?\'
-            ZeroMemory ( szPrependFilename, LEN_PATHNAME * sizeof(WCHAR) );
+            MCAutoWPtr    szPrependFilename ( LEN_PATHNAME );
             if ( wcsncmp ( pRenamePathname, L"\\\\", 2 ) != 0 )
             {
-                wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+                wcscpy_s ( szPrependFilename.wptr, LEN_PATHNAME, L"\\\\?\\" );
             }
-            wcscat_s ( szPrependFilename, LEN_PATHNAME, pRenamePathname );
+            wcscat_s ( szPrependFilename.wptr, LEN_PATHNAME, pRenamePathname );
 
-            bDeleted = DeleteFile ( szPrependFilename );
+            bDeleted = DeleteFile ( szPrependFilename.wptr );
         }
         else
         {
             //  We will hav to prepend '\\?\'
-            ZeroMemory ( szPrependFilename, LEN_PATHNAME * sizeof(WCHAR) );
+            MCAutoWPtr    szPrependFilename ( LEN_PATHNAME );
             if ( wcsncmp ( pRenamePathname, L"\\\\", 2 ) != 0 )
             {
-                wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+                wcscpy_s ( szPrependFilename.wptr, LEN_PATHNAME, L"\\\\?\\" );
             }
-            wcscat_s ( szPrependFilename, LEN_PATHNAME, pRenamePathname );
+            wcscat_s ( szPrependFilename.wptr, LEN_PATHNAME, pRenamePathname );
 
-            bDeleted = RemoveDirectory ( szPrependFilename );
+            bDeleted = RemoveDirectory ( szPrependFilename.wptr );
         }
 
         //
@@ -1200,15 +1200,15 @@ BOOL writeOverFile(WCHAR *pFullPathname, WIN32_FIND_DATA *pFindFileData )
 
         //
         //  We will hav to prepend '\\?\'
-        ZeroMemory ( szPrependFilename, LEN_PATHNAME * sizeof(WCHAR) );
+        MCAutoWPtr    szPrependFilename ( LEN_PATHNAME );
         if ( wcsncmp ( pFullPathname, L"\\\\", 2 ) != 0 )
         {
-            wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+            wcscpy_s ( szPrependFilename.wptr, LEN_PATHNAME, L"\\\\?\\" );
         }
-        wcscat_s ( szPrependFilename, LEN_PATHNAME, pFullPathname );
+        wcscat_s ( szPrependFilename.wptr, LEN_PATHNAME, pFullPathname );
 
         HANDLE hFile =
-            CreateFile ( szPrependFilename, dwDesiredAccess, dwShareMode,
+            CreateFile ( szPrependFilename.wptr, dwDesiredAccess, dwShareMode,
                 lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile );
         if ( hFile != INVALID_HANDLE_VALUE )
         {
