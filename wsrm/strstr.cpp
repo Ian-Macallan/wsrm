@@ -26,6 +26,8 @@
 #include <Shlwapi.h>
 #include <Shellapi.h>
 
+#include "AutomaticCompilerVersion.h"
+
 #pragma comment (lib, "Shlwapi.lib")
 #pragma comment (lib, "advapi32.lib")
 #pragma comment (lib, "Shell32.lib")
@@ -5292,6 +5294,10 @@ void PrintRealVersionW (int iWidth)
                 memcpy ( ModuleText, pBufferInfo, iBufferLen * sizeof(WCHAR) );
                 PrintDirectW ( L"%*s : %s\n", iWidth, L"Description", ModuleText );
             }
+
+            ZeroMemory ( ModuleText, sizeof(ModuleText) );
+            swprintf_s ( ModuleText, _wsizeof(ModuleText), L"%s (%d)", VS_VERSION_W, _MSC_FULL_VER );
+            PrintDirectW ( L"%*s : %s\n", iWidth, L"Compiler", ModuleText );
         }
 
         if ( pData != NULL )
@@ -5377,7 +5383,7 @@ void PrintRealVersionA (int iWidth)
                 PrintDirectA ( "%*s : %s\n", iWidth, "Web Site", ModuleText );
             }
 
-            sprintf_s ( ModuleKey, _wsizeof ( ModuleKey ), "\\StringFileInfo\\%08x\\Comments", dwKey );
+            sprintf_s ( ModuleKey, sizeof ( ModuleKey ), "\\StringFileInfo\\%08x\\Comments", dwKey );
             bResult = VerQueryValueA ( pData, ModuleKey, &pBufferInfo, &iBufferLen );
             if ( bResult )
             {
@@ -5394,6 +5400,10 @@ void PrintRealVersionA (int iWidth)
                 memcpy ( ModuleText, pBufferInfo, iBufferLen * sizeof(char) );
                 PrintDirectA ( "%*s : %s\n", iWidth, "Description", ModuleText );
             }
+
+            ZeroMemory ( ModuleText, sizeof(ModuleText) );
+            sprintf_s ( ModuleText, sizeof(ModuleText), "%s (%d)", VS_VERSION_A, _MSC_FULL_VER );
+            PrintDirectA ( "%*s : %s\n", iWidth, "Compiler", ModuleText );
         }
 
         if ( pData != NULL )

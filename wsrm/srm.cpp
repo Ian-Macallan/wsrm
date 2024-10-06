@@ -56,6 +56,7 @@ static  WCHAR       LocaleString [ LEN_PATHNAME ];
 #define TIMES_NEW_ROMAN_W   L"Times New Roman"
 
 static WCHAR    szCurrentDirectory [ LEN_PATHNAME ];
+static WCHAR    szPrependFilename [ LEN_PATHNAME ];
 
 static WCHAR    szFillWithFile [ LEN_PATHNAME ];
 static WCHAR    szJpegext [ LEN_PATHNAME ];
@@ -604,8 +605,12 @@ BOOL readFillFile ( )
     HANDLE  hTemplateFile = NULL;
 
     //
+    //  We will hav to prepend '\\?\'
+    wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+    wcscat_s ( szPrependFilename, LEN_PATHNAME, szFillWithFile );
+
     HANDLE hFile =
-        CreateFile ( szFillWithFile, dwDesiredAccess, dwShareMode,
+        CreateFile ( szPrependFilename, dwDesiredAccess, dwShareMode,
             lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile );
     if ( hFile != INVALID_HANDLE_VALUE )
     {
@@ -831,11 +836,19 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
         BOOL bDeleted = FALSE;
         if ( ! bDirectory )
         {
-            bDeleted = DeleteFile ( pFullPathname );
+            //  We will hav to prepend '\\?\'
+            wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+            wcscat_s ( szPrependFilename, LEN_PATHNAME, pFullPathname );
+
+            bDeleted = DeleteFile ( szPrependFilename );
         }
         else
         {
-            bDeleted = RemoveDirectory ( pFullPathname );
+            //  We will hav to prepend '\\?\'
+            wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+            wcscat_s ( szPrependFilename, LEN_PATHNAME, pFullPathname );
+
+            bDeleted = RemoveDirectory ( szPrependFilename );
         }
 
         //
@@ -865,16 +878,16 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
     //
     //  Prepare Split Pathname
     WCHAR *pInputDrive = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputDrive, LEN_PATHNAME );
+    ZeroMemory ( pInputDrive, LEN_PATHNAME * sizeof(WCHAR) );
 
     WCHAR *pInputDirectory = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputDirectory,LEN_PATHNAME );
+    ZeroMemory ( pInputDirectory, LEN_PATHNAME * sizeof(WCHAR) );
 
     WCHAR *pInputFilename = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputFilename, LEN_PATHNAME );
+    ZeroMemory ( pInputFilename, LEN_PATHNAME * sizeof(WCHAR) );
 
     WCHAR *pInputExtension = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputExtension, LEN_PATHNAME );
+    ZeroMemory ( pInputExtension, LEN_PATHNAME * sizeof(WCHAR) );
 
     //
     int iError =
@@ -941,7 +954,7 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
 
     //
     WCHAR *pRenameFilename = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pRenameFilename, LEN_PATHNAME );
+    ZeroMemory ( pRenameFilename, LEN_PATHNAME * sizeof(WCHAR) );
     time_t currentTime = time(NULL);
     swprintf ( pRenameFilename, LEN_PATHNAME, L"wsrm %d %d %ld", RandomCount % 1000,  rand(), ( DWORD ) currentTime );
     size_t iStart = wcslen ( pRenameFilename );
@@ -962,7 +975,7 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
 
     //  Set Rename Path
     WCHAR *pRenamePathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pRenamePathname, LEN_PATHNAME );
+    ZeroMemory ( pRenamePathname, LEN_PATHNAME * sizeof(WCHAR) );
     wcscpy_s ( pRenamePathname, LEN_PATHNAME, pInputDrive );
     wcscat_s ( pRenamePathname, LEN_PATHNAME, pInputDirectory );
     wcscat_s ( pRenamePathname, LEN_PATHNAME, pRenameFilename );
@@ -992,11 +1005,19 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
         BOOL bDeleted = FALSE;
         if ( ! bDirectory )
         {
-            bDeleted = DeleteFile ( pRenamePathname );
+            //  We will hav to prepend '\\?\'
+            wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+            wcscat_s ( szPrependFilename, LEN_PATHNAME, pRenamePathname );
+
+            bDeleted = DeleteFile ( szPrependFilename );
         }
         else
         {
-            bDeleted = RemoveDirectory ( pRenamePathname );
+            //  We will hav to prepend '\\?\'
+            wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+            wcscat_s ( szPrependFilename, LEN_PATHNAME, pRenamePathname );
+
+            bDeleted = RemoveDirectory ( szPrependFilename );
         }
 
         //
@@ -1158,8 +1179,12 @@ BOOL writeOverFile(WCHAR *pFullPathname, WIN32_FIND_DATA *pFindFileData )
         HANDLE  hTemplateFile = NULL;
 
         //
+        //  We will hav to prepend '\\?\'
+        wcscpy_s ( szPrependFilename, LEN_PATHNAME, L"\\\\?\\" );
+        wcscat_s ( szPrependFilename, LEN_PATHNAME, pFullPathname );
+
         HANDLE hFile =
-            CreateFile ( pFullPathname, dwDesiredAccess, dwShareMode,
+            CreateFile ( szPrependFilename, dwDesiredAccess, dwShareMode,
                 lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile );
         if ( hFile != INVALID_HANDLE_VALUE )
         {
@@ -1397,16 +1422,16 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
 
     //
     WCHAR *pInputDrive = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputDrive, LEN_PATHNAME );
+    ZeroMemory ( pInputDrive, LEN_PATHNAME * sizeof(WCHAR) );
 
     WCHAR *pInputDirectory = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputDirectory,LEN_PATHNAME );
+    ZeroMemory ( pInputDirectory,LEN_PATHNAME * sizeof(WCHAR) );
 
     WCHAR *pInputFilename = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputFilename, LEN_PATHNAME );
+    ZeroMemory ( pInputFilename, LEN_PATHNAME * sizeof(WCHAR) );
 
     WCHAR *pInputExtension = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputExtension, LEN_PATHNAME );
+    ZeroMemory ( pInputExtension, LEN_PATHNAME * sizeof(WCHAR) );
 
     int iError =
         _wsplitpath_s (
@@ -1430,7 +1455,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
     {
         //
         WCHAR *pDirectoryPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-        ZeroMemory ( pDirectoryPathname, LEN_PATHNAME );
+        ZeroMemory ( pDirectoryPathname, LEN_PATHNAME * sizeof(WCHAR) );
         wcscpy_s ( pDirectoryPathname, LEN_PATHNAME, pInputDrive );
         wcscat_s ( pDirectoryPathname, LEN_PATHNAME, pInputDirectory );
         wcscat_s ( pDirectoryPathname, LEN_PATHNAME, L"*.*" );
@@ -1471,7 +1496,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                     //
                     //  Set Full Pathname
                     WCHAR *pPartialPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-                    ZeroMemory ( pPartialPathname, LEN_PATHNAME );
+                    ZeroMemory ( pPartialPathname, LEN_PATHNAME * sizeof(WCHAR) );
                     wcscpy_s ( pPartialPathname, LEN_PATHNAME, pInputDrive );
                     wcscat_s ( pPartialPathname, LEN_PATHNAME, pInputDirectory );
                     wcscat_s ( pPartialPathname, LEN_PATHNAME, FindFileData.cFileName );
@@ -1479,7 +1504,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
 
                     //
                     WCHAR *pFullPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-                    ZeroMemory ( pFullPathname, LEN_PATHNAME );
+                    ZeroMemory ( pFullPathname, LEN_PATHNAME * sizeof(WCHAR) );
 
                     //
                     //  Get Full Pathname from a Paetial Pathname
@@ -1518,7 +1543,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                         //
                         //
                         WCHAR *pSubPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-                        ZeroMemory ( pSubPathname, LEN_PATHNAME );
+                        ZeroMemory ( pSubPathname, LEN_PATHNAME * sizeof(WCHAR) );
                         wcscpy_s ( pSubPathname, LEN_PATHNAME / sizeof(WCHAR), pFullPathname );
                         wcscat_s ( pSubPathname, LEN_PATHNAME / sizeof(WCHAR), L"\\" );
                         wcscat_s ( pSubPathname, LEN_PATHNAME / sizeof(WCHAR), pInputFilename );
@@ -1556,7 +1581,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
     //
     //  For Files And Directories
     WCHAR *pSearchFilePathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pSearchFilePathname, LEN_PATHNAME );
+    ZeroMemory ( pSearchFilePathname, LEN_PATHNAME * sizeof(WCHAR) );
     wcscpy_s ( pSearchFilePathname, LEN_PATHNAME, pInputDrive );
     wcscat_s ( pSearchFilePathname, LEN_PATHNAME, pInputDirectory );
     wcscat_s ( pSearchFilePathname, LEN_PATHNAME, pInputFilename );
@@ -1592,7 +1617,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
             //
             //  Set Full Pathname
             WCHAR *pPartialPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-            ZeroMemory ( pPartialPathname, LEN_PATHNAME );
+            ZeroMemory ( pPartialPathname, LEN_PATHNAME * sizeof(WCHAR) );
             wcscpy_s ( pPartialPathname, LEN_PATHNAME, pInputDrive );
             wcscat_s ( pPartialPathname, LEN_PATHNAME, pInputDirectory );
             wcscat_s ( pPartialPathname, LEN_PATHNAME, FindFileData.cFileName );
@@ -1601,7 +1626,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
 
             //
             WCHAR *pFullPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-            ZeroMemory ( pFullPathname, LEN_PATHNAME );
+            ZeroMemory ( pFullPathname, LEN_PATHNAME * sizeof(WCHAR) );
 
             //
             //  Get Full Pathname from Partial Pathname
@@ -1727,7 +1752,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                         //
                         //
                         WCHAR *pSubPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-                        ZeroMemory ( pSubPathname, LEN_PATHNAME );
+                        ZeroMemory ( pSubPathname, LEN_PATHNAME * sizeof(WCHAR) );
                         wcscpy_s ( pSubPathname, LEN_PATHNAME / sizeof(WCHAR), pFullPathname );
                         wcscat_s ( pSubPathname, LEN_PATHNAME / sizeof(WCHAR), L"\\*.*" );
 

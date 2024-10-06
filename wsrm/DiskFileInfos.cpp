@@ -40,8 +40,8 @@ static WCHAR                szShortFilename [ LEN_PATHNAME ];
 static WCHAR                szOutputFilename [ LEN_PATHNAME ];
 
 //
-static WCHAR                szAttributeName [ MAX_PATH ];
-static WCHAR                szFileAttribute [ MAX_PATH ];
+static WCHAR                szAttributeName [ LEN_PATHNAME ];
+static WCHAR                szFileAttribute [ LEN_PATHNAME ];
 
 #define LEN_DUMP_LINE       128
 static WCHAR                szDumpLineW [ LEN_DUMP_LINE ];
