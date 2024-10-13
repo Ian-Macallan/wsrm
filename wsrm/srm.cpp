@@ -605,17 +605,26 @@ BOOL readFillFile ( )
 
     //
     //  We will hav to prepend '\\?\'
-    MCAutoWPtr    szPrependFilename ( LEN_PATHNAME );
-
-    if ( wcsncmp ( szFillWithFile, L"\\\\", 2 ) != 0 )
+    AutoPtrW    autoPrependFilename ( LEN_PATHNAME );
+    if ( wcsncmp ( szFillWithFile, W_PREPEND_PREFIX, 2 ) != 0 )
     {
-        wcscpy_s ( szPrependFilename.wptr, LEN_PATHNAME, L"\\\\?\\" );
+        wcscpy_s ( autoPrependFilename.wptr, LEN_PATHNAME, W_PREPEND_PREFIX );
     }
-    wcscat_s ( szPrependFilename.wptr, LEN_PATHNAME, szFillWithFile );
+    wcscat_s ( autoPrependFilename.wptr, LEN_PATHNAME, szFillWithFile );
 
+    //  Try With prepended name
     HANDLE hFile =
-        CreateFile ( szPrependFilename.wptr, dwDesiredAccess, dwShareMode,
+        CreateFile ( autoPrependFilename.wptr, dwDesiredAccess, dwShareMode,
             lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile );
+    if ( hFile == INVALID_HANDLE_VALUE )
+    {
+        //  Try With name
+        hFile =
+            CreateFile ( szFillWithFile, dwDesiredAccess, dwShareMode,
+                lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile );
+    }
+
+    //
     if ( hFile != INVALID_HANDLE_VALUE )
     {
         DWORD   dwNumberOfBytesToRead   = ( DWORD) iBufferMaxLength;
@@ -841,26 +850,38 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
         if ( ! bDirectory )
         {
             //  We will hav to prepend '\\?\'
-            MCAutoWPtr    szPrependFilename ( LEN_PATHNAME );
-            if ( wcsncmp ( pFullPathname, L"\\\\", 2 ) != 0 )
+            AutoPtrW    autoPrependFilename ( LEN_PATHNAME );
+            if ( wcsncmp ( pFullPathname, W_PREPEND_PREFIX, 2 ) != 0 )
             {
-                wcscpy_s ( szPrependFilename.wptr, LEN_PATHNAME, L"\\\\?\\" );
+                wcscpy_s ( autoPrependFilename.wptr, LEN_PATHNAME, W_PREPEND_PREFIX );
             }
-            wcscat_s ( szPrependFilename.wptr, LEN_PATHNAME, pFullPathname );
+            wcscat_s ( autoPrependFilename.wptr, LEN_PATHNAME, pFullPathname );
 
-            bDeleted = DeleteFile ( szPrependFilename.wptr );
+            //  Try With prepended name
+            bDeleted = DeleteFile ( autoPrependFilename.wptr );
+            if ( ! bDeleted )
+            {
+                //  Try With name
+                bDeleted = DeleteFile ( pFullPathname );
+            }
         }
         else
         {
             //  We will hav to prepend '\\?\'
-            MCAutoWPtr    szPrependFilename ( LEN_PATHNAME );
-            if ( wcsncmp ( pFullPathname, L"\\\\", 2 ) != 0 )
+            AutoPtrW    autoPrependFilename ( LEN_PATHNAME );
+            if ( wcsncmp ( pFullPathname, W_PREPEND_PREFIX, 2 ) != 0 )
             {
-                wcscpy_s ( szPrependFilename.wptr, LEN_PATHNAME, L"\\\\?\\" );
+                wcscpy_s ( autoPrependFilename.wptr, LEN_PATHNAME, W_PREPEND_PREFIX );
             }
-            wcscat_s ( szPrependFilename.wptr, LEN_PATHNAME, pFullPathname );
+            wcscat_s ( autoPrependFilename.wptr, LEN_PATHNAME, pFullPathname );
 
-            bDeleted = RemoveDirectory ( szPrependFilename.wptr );
+            //  Try With prepended name
+            bDeleted = RemoveDirectory ( autoPrependFilename.wptr );
+            if ( ! bDeleted )
+            {
+                //  Try With name
+                bDeleted = RemoveDirectory ( pFullPathname );
+            }
         }
 
         //
@@ -889,23 +910,19 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
 
     //
     //  Prepare Split Pathname
-    WCHAR *pInputDrive = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputDrive, LEN_PATHNAME * sizeof(WCHAR) );
+    AutoPtrW autoInputDrive ( LEN_PATHNAME );
 
-    WCHAR *pInputDirectory = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputDirectory, LEN_PATHNAME * sizeof(WCHAR) );
+    AutoPtrW autoInputDirectory ( LEN_PATHNAME );
 
-    WCHAR *pInputFilename = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputFilename, LEN_PATHNAME * sizeof(WCHAR) );
+    AutoPtrW autoInputFilename ( LEN_PATHNAME );
 
-    WCHAR *pInputExtension = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputExtension, LEN_PATHNAME * sizeof(WCHAR) );
+    AutoPtrW autoInputExtension ( LEN_PATHNAME );
 
     //
     int iError =
         _wsplitpath_s (
-            pFullPathname, pInputDrive, LEN_PATHNAME, pInputDirectory, LEN_PATHNAME,
-            pInputFilename, LEN_PATHNAME, pInputExtension, LEN_PATHNAME );
+            pFullPathname, autoInputDrive.wptr, LEN_PATHNAME, autoInputDirectory.wptr, LEN_PATHNAME,
+            autoInputFilename.wptr, LEN_PATHNAME, autoInputExtension.wptr, LEN_PATHNAME );
     if ( iError != 0 )
     {
         int iError = errno;
@@ -948,7 +965,7 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
     }
 
     //  Then Prepare filenames
-    size_t lengthFilename = wcslen ( pInputFilename ) +  wcslen ( pInputExtension );
+    size_t lengthFilename = wcslen ( autoInputFilename.wptr ) +  wcslen ( autoInputExtension.wptr );
 
     //  The position at the length will be replaced by a zero   
 
@@ -965,41 +982,63 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
     }
 
     //
-    WCHAR *pRenameFilename = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pRenameFilename, LEN_PATHNAME * sizeof(WCHAR) );
+    AutoPtrW autoRenameFilename ( LEN_PATHNAME );
     time_t currentTime = time(NULL);
-    swprintf ( pRenameFilename, LEN_PATHNAME, L"wsrm %d %d %ld", RandomCount % 1000,  rand(), ( DWORD ) currentTime );
-    size_t iStart = wcslen ( pRenameFilename );
+    swprintf ( autoRenameFilename.wptr, LEN_PATHNAME, L"wsrm %d %d %ld", RandomCount % 1000,  rand(), ( DWORD ) currentTime );
+    size_t iStart = wcslen ( autoRenameFilename.wptr );
 
     //  Add spaces at the end of the string
     for ( size_t i = iStart; i < lengthFilename; i++ )
     {
-        pRenameFilename [ i ] = L' ';
+        autoRenameFilename.wptr [ i ] = L' ';
     }
 
     //
     //  Randomize change space to random characters
-    randomizeName ( pRenameFilename );
-    pRenameFilename [ lengthFilename ] = L'\0';
+    randomizeName ( autoRenameFilename.wptr );
+    autoRenameFilename.wptr [ lengthFilename ] = L'\0';
 
     //  The add a file type
-    wcscat_s ( pRenameFilename, LEN_PATHNAME, FILE_SUFFIX );
+    wcscat_s ( autoRenameFilename.wptr, LEN_PATHNAME, FILE_SUFFIX );
 
     //  Set Rename Path
-    WCHAR *pRenamePathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pRenamePathname, LEN_PATHNAME * sizeof(WCHAR) );
-    wcscpy_s ( pRenamePathname, LEN_PATHNAME, pInputDrive );
-    wcscat_s ( pRenamePathname, LEN_PATHNAME, pInputDirectory );
-    wcscat_s ( pRenamePathname, LEN_PATHNAME, pRenameFilename );
+    AutoPtrW autoRenamePathname ( LEN_PATHNAME );
+    wcscpy_s ( autoRenamePathname.wptr, LEN_PATHNAME, autoInputDrive.wptr );
+    wcscat_s ( autoRenamePathname.wptr, LEN_PATHNAME, autoInputDirectory.wptr );
+    wcscat_s ( autoRenamePathname.wptr, LEN_PATHNAME, autoRenameFilename.wptr );
 
     //
-    PrintTraceW ( L"%s - Will be Renamed to %s\n", pFullPathname, pRenamePathname );
+    PrintTraceW ( L"%s - Will be Renamed to %s\n", pFullPathname, autoRenamePathname.wptr );
 
     //
     //  Rename the file
     if ( ! bProbeMode && bSuccess )
     {
-        int iRenamed = _wrename ( pFullPathname, pRenamePathname );
+        //
+        AutoPtrW autoPrependSource ( LEN_PATHNAME );
+        AutoPtrW autoPrependTarget ( LEN_PATHNAME );
+
+        //
+        if ( wcsncmp ( pFullPathname, W_PREPEND_PREFIX, 2 ) != 0 )
+        {
+            wcscpy_s ( autoPrependSource.wptr, LEN_PATHNAME, W_PREPEND_PREFIX );
+        }
+        wcscat_s ( autoPrependSource.wptr, LEN_PATHNAME, pFullPathname );
+
+        //
+        if ( wcsncmp ( autoRenamePathname.wptr, W_PREPEND_PREFIX, 2 ) != 0 )
+        {
+            wcscpy_s ( autoPrependTarget.wptr, LEN_PATHNAME, W_PREPEND_PREFIX );
+        }
+        wcscat_s ( autoPrependTarget.wptr, LEN_PATHNAME, autoRenamePathname.wptr );
+
+        //
+        int iRenamed = _wrename ( pFullPathname, autoRenamePathname.wptr );
+        if ( iRenamed != 0 )
+        {
+            iRenamed = _wrename ( autoPrependSource.wptr, autoPrependTarget.wptr );
+        }
+
         if ( iRenamed != 0 )
         {
             int iError = errno;
@@ -1018,34 +1057,71 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
         if ( ! bDirectory )
         {
             //  We will hav to prepend '\\?\'
-            MCAutoWPtr    szPrependFilename ( LEN_PATHNAME );
-            if ( wcsncmp ( pRenamePathname, L"\\\\", 2 ) != 0 )
+            AutoPtrW    autoPrependFilename ( LEN_PATHNAME );
+            if ( wcsncmp ( autoRenamePathname.wptr, W_PREPEND_PREFIX, 2 ) != 0 )
             {
-                wcscpy_s ( szPrependFilename.wptr, LEN_PATHNAME, L"\\\\?\\" );
+                wcscpy_s ( autoPrependFilename.wptr, LEN_PATHNAME, W_PREPEND_PREFIX );
             }
-            wcscat_s ( szPrependFilename.wptr, LEN_PATHNAME, pRenamePathname );
+            wcscat_s ( autoPrependFilename.wptr, LEN_PATHNAME, autoRenamePathname.wptr );
 
-            bDeleted = DeleteFile ( szPrependFilename.wptr );
+            //  Try With prepended name
+            bDeleted = DeleteFile ( autoPrependFilename.wptr );
+            if ( ! bDeleted )
+            {
+                //  Try With name
+                bDeleted = DeleteFile ( autoRenamePathname.wptr );
+            }
         }
         else
         {
             //  We will hav to prepend '\\?\'
-            MCAutoWPtr    szPrependFilename ( LEN_PATHNAME );
-            if ( wcsncmp ( pRenamePathname, L"\\\\", 2 ) != 0 )
+            AutoPtrW    autoPrependFilename ( LEN_PATHNAME );
+            if ( wcsncmp ( autoRenamePathname.wptr, W_PREPEND_PREFIX, 2 ) != 0 )
             {
-                wcscpy_s ( szPrependFilename.wptr, LEN_PATHNAME, L"\\\\?\\" );
+                wcscpy_s ( autoPrependFilename.wptr, LEN_PATHNAME, W_PREPEND_PREFIX );
             }
-            wcscat_s ( szPrependFilename.wptr, LEN_PATHNAME, pRenamePathname );
+            wcscat_s ( autoPrependFilename.wptr, LEN_PATHNAME, autoRenamePathname.wptr );
 
-            bDeleted = RemoveDirectory ( szPrependFilename.wptr );
+            //  Try With prepended name
+            bDeleted = RemoveDirectory ( autoPrependFilename.wptr );
+            if ( ! bDeleted )
+            {
+                //  Try With name
+                bDeleted = RemoveDirectory ( autoRenamePathname.wptr );
+            }
         }
 
         //
         if ( ! bDeleted )
         {
-            PrintStderrW ( L"Error - Deleting File '%s' - Cause : 0x%lx - %s\n", pRenamePathname, GetLastError(), GetLastErrorText() );
+            PrintStderrW ( L"Error - Deleting File '%s' - Cause : 0x%lx - %s\n", autoRenamePathname.wptr, GetLastError(), GetLastErrorText() );
 
-            int iRenamed = _wrename ( pRenamePathname, pFullPathname );
+            //
+            AutoPtrW autoPrependSource ( LEN_PATHNAME );
+            AutoPtrW autoPrependTarget ( LEN_PATHNAME );
+
+            //
+            if ( wcsncmp ( autoRenamePathname.wptr, W_PREPEND_PREFIX, 2 ) != 0 )
+            {
+                wcscpy_s ( autoPrependSource.wptr, LEN_PATHNAME, W_PREPEND_PREFIX );
+            }
+            wcscat_s ( autoPrependSource.wptr, LEN_PATHNAME, autoRenamePathname.wptr );
+
+            //
+            if ( wcsncmp ( pFullPathname, W_PREPEND_PREFIX, 2 ) != 0 )
+            {
+                wcscpy_s ( autoPrependTarget.wptr, LEN_PATHNAME, W_PREPEND_PREFIX );
+            }
+            wcscat_s ( autoPrependTarget.wptr, LEN_PATHNAME, pFullPathname );
+
+            //
+            int iRenamed = _wrename ( autoRenamePathname.wptr, pFullPathname );
+            if ( iRenamed != 0 )
+            {
+                iRenamed = _wrename ( autoPrependSource.wptr, autoPrependTarget.wptr );
+            }
+
+            //
             if ( iRenamed == 0 )
             {
                 PrintNormalW ( L"%s - Restored\n", pFullPathname );
@@ -1080,15 +1156,6 @@ BOOL renameAndDelete ( WCHAR *pFullPathname, BOOL bDirectory )
     }
 
     //
-    free ( pInputDrive );
-    free ( pInputDirectory );
-    free ( pInputFilename );
-    free ( pInputExtension );
-
-    //
-    free ( pRenameFilename );
-    free ( pRenamePathname );
-
     return bSuccess;
 }
 
@@ -1190,26 +1257,34 @@ BOOL writeOverFile(WCHAR *pFullPathname, WIN32_FIND_DATA *pFindFileData )
     //
     for ( int i = 1; i <= iPasses && ! isAborted; i++ )
     {
-
-        LPSECURITY_ATTRIBUTES lpSecurityAttributes = NULL;
-        DWORD   dwDesiredAccess = FILE_GENERIC_WRITE;
-        DWORD   dwShareMode = 0;
-        DWORD   dwCreationDisposition = OPEN_EXISTING;
-        DWORD   dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL;
-        HANDLE  hTemplateFile = NULL;
+        LPSECURITY_ATTRIBUTES lpSecurityAttributes  = NULL;
+        DWORD   dwDesiredAccess                     = FILE_GENERIC_WRITE;
+        DWORD   dwShareMode                         = 0;
+        DWORD   dwCreationDisposition               = OPEN_EXISTING;
+        DWORD   dwFlagsAndAttributes                = FILE_ATTRIBUTE_NORMAL;
+        HANDLE  hTemplateFile                       = NULL;
 
         //
         //  We will hav to prepend '\\?\'
-        MCAutoWPtr    szPrependFilename ( LEN_PATHNAME );
-        if ( wcsncmp ( pFullPathname, L"\\\\", 2 ) != 0 )
+        AutoPtrW    autoPrependFilename ( LEN_PATHNAME );
+        if ( wcsncmp ( pFullPathname, W_PREPEND_PREFIX, 2 ) != 0 )
         {
-            wcscpy_s ( szPrependFilename.wptr, LEN_PATHNAME, L"\\\\?\\" );
+            wcscpy_s ( autoPrependFilename.wptr, LEN_PATHNAME, W_PREPEND_PREFIX );
         }
-        wcscat_s ( szPrependFilename.wptr, LEN_PATHNAME, pFullPathname );
+        wcscat_s ( autoPrependFilename.wptr, LEN_PATHNAME, pFullPathname );
 
+        //  Try With prepended name
         HANDLE hFile =
-            CreateFile ( szPrependFilename.wptr, dwDesiredAccess, dwShareMode,
+            CreateFile ( autoPrependFilename.wptr, dwDesiredAccess, dwShareMode,
                 lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile );
+        if ( hFile == INVALID_HANDLE_VALUE )
+        {
+            //  Try With name
+            hFile =
+                CreateFile ( pFullPathname, dwDesiredAccess, dwShareMode,
+                    lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile );
+        }
+
         if ( hFile != INVALID_HANDLE_VALUE )
         {
             PrintVerboseW ( L"%s - Writing Over", pFullPathname );
@@ -1445,22 +1520,18 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
     PrintTraceW ( L"%s - Searching\n", lpPathname );
 
     //
-    WCHAR *pInputDrive = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputDrive, LEN_PATHNAME * sizeof(WCHAR) );
+    AutoPtrW autoInputDrive ( LEN_PATHNAME );
 
-    WCHAR *pInputDirectory = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputDirectory,LEN_PATHNAME * sizeof(WCHAR) );
+    AutoPtrW autoInputDirectory ( LEN_PATHNAME );
 
-    WCHAR *pInputFilename = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputFilename, LEN_PATHNAME * sizeof(WCHAR) );
+    AutoPtrW autoInputFilename ( LEN_PATHNAME );
 
-    WCHAR *pInputExtension = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pInputExtension, LEN_PATHNAME * sizeof(WCHAR) );
+    AutoPtrW autoInputExtension ( LEN_PATHNAME );
 
     int iError =
         _wsplitpath_s (
-            lpPathname, pInputDrive, LEN_PATHNAME, pInputDirectory, LEN_PATHNAME,
-            pInputFilename, LEN_PATHNAME, pInputExtension, LEN_PATHNAME );
+            lpPathname, autoInputDrive.wptr, LEN_PATHNAME, autoInputDirectory.wptr, LEN_PATHNAME,
+            autoInputFilename.wptr, LEN_PATHNAME, autoInputExtension.wptr, LEN_PATHNAME );
     if ( iError != 0 )
     {
         int iError = errno;
@@ -1472,27 +1543,41 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
 
     //
     PrintTraceW ( L"Drive : '%s' - Directory :'%s' - Filename : '%s' - Extension : '%s'\n",
-            pInputDrive, pInputDirectory,  pInputFilename, pInputExtension );
+            autoInputDrive.wptr, autoInputDirectory.wptr,  autoInputFilename.wptr, autoInputExtension.wptr );
 
     //  First Recurse Directories for files
     if ( bRecursive && ! isAborted )
     {
         //
-        WCHAR *pDirectoryPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-        ZeroMemory ( pDirectoryPathname, LEN_PATHNAME * sizeof(WCHAR) );
-        wcscpy_s ( pDirectoryPathname, LEN_PATHNAME, pInputDrive );
-        wcscat_s ( pDirectoryPathname, LEN_PATHNAME, pInputDirectory );
-        wcscat_s ( pDirectoryPathname, LEN_PATHNAME, L"*.*" );
+        AutoPtrW autoDirectoryPathname ( LEN_PATHNAME );
+        wcscpy_s ( autoDirectoryPathname.wptr, LEN_PATHNAME, autoInputDrive.wptr );
+        wcscat_s ( autoDirectoryPathname.wptr, LEN_PATHNAME, autoInputDirectory.wptr );
+        wcscat_s ( autoDirectoryPathname.wptr, LEN_PATHNAME, L"*.*" );
 
         //
-        PrintTraceW ( L"FindFirstFile will use '%s'\n", pDirectoryPathname );
+        PrintTraceW ( L"FindFirstFile will use '%s'\n", autoDirectoryPathname.wptr );
 
         //  FILE_ATTRIBUTE_ENCRYPTED FILE_ATTRIBUTE_HIDDEN FILE_ATTRIBUTE_READONLY
         WIN32_FIND_DATA FindFileData;
 
         ZeroMemory ( &FindFileData, sizeof( FindFileData ) );
 
-        HANDLE hFileFind = FindFirstFile ( pDirectoryPathname, &FindFileData );
+        //
+        AutoPtrW    autoPrependFilename ( LEN_PATHNAME );
+        if ( wcsncmp ( autoDirectoryPathname.wptr, W_PREPEND_PREFIX, 2 ) != 0 )
+        {
+            wcscpy_s ( autoPrependFilename.wptr, LEN_PATHNAME, W_PREPEND_PREFIX );
+        }
+        wcscat_s ( autoPrependFilename.wptr, LEN_PATHNAME, autoDirectoryPathname.wptr );
+
+        //  Try With name
+        HANDLE hFileFind = FindFirstFile ( autoDirectoryPathname.wptr, &FindFileData );
+        if ( hFileFind == INVALID_HANDLE_VALUE )
+        {
+            //  Search with prepend name
+            hFileFind = FindFirstFile ( autoPrependFilename.wptr, &FindFileData );
+        }
+
         if ( hFileFind != INVALID_HANDLE_VALUE )
         {
             //
@@ -1519,25 +1604,23 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                 {
                     //
                     //  Set Full Pathname
-                    WCHAR *pPartialPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-                    ZeroMemory ( pPartialPathname, LEN_PATHNAME * sizeof(WCHAR) );
-                    wcscpy_s ( pPartialPathname, LEN_PATHNAME, pInputDrive );
-                    wcscat_s ( pPartialPathname, LEN_PATHNAME, pInputDirectory );
-                    wcscat_s ( pPartialPathname, LEN_PATHNAME, FindFileData.cFileName );
-                    PrintTraceW ( L"Partial Pathname '%s'\n", pPartialPathname );
+                    AutoPtrW autoPartialPathname ( LEN_PATHNAME );
+                    wcscpy_s ( autoPartialPathname.wptr, LEN_PATHNAME, autoInputDrive.wptr );
+                    wcscat_s ( autoPartialPathname.wptr, LEN_PATHNAME, autoInputDirectory.wptr );
+                    wcscat_s ( autoPartialPathname.wptr, LEN_PATHNAME, FindFileData.cFileName );
+                    PrintTraceW ( L"Partial Pathname '%s'\n", autoPartialPathname.wptr );
 
                     //
-                    WCHAR *pFullPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-                    ZeroMemory ( pFullPathname, LEN_PATHNAME * sizeof(WCHAR) );
+                    AutoPtrW autoFullPathname ( LEN_PATHNAME );
 
                     //
                     //  Get Full Pathname from a Paetial Pathname
                     LPWSTR lpFilepart = NULL;
-                    DWORD dwResult = GetFullPathName ( pPartialPathname, LEN_PATHNAME, pFullPathname, &lpFilepart );
+                    DWORD dwResult = GetFullPathName ( autoPartialPathname.wptr, LEN_PATHNAME, autoFullPathname.wptr, &lpFilepart );
                     if ( dwResult > 0 )
                     {
                         //
-                        BOOL bFreeCluster = getFreeCluster ( pFullPathname );
+                        BOOL bFreeCluster = getFreeCluster ( autoFullPathname.wptr );
 
                         //
                         if ( bCheckCluster )
@@ -1548,7 +1631,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                             {
                                 ZeroMemory ( lpVolumeLcnInfo, sizeof ( VOLUME_DISK_INFO )  );
 
-                                BOOL bResult = GetVolumeDiskInfo ( pFullPathname, lpVolumeLcnInfo );
+                                BOOL bResult = GetVolumeDiskInfo ( autoFullPathname.wptr, lpVolumeLcnInfo );
                                 if ( ! bResult )
                                 {
                                     lpVolumeLcnInfo->BytesPerSector         = dwBytePerSector;
@@ -1559,33 +1642,28 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                         }
 
                         //
-                        PrintVerboseW ( L"%s - Entering\n", pFullPathname );
+                        PrintVerboseW ( L"%s - Entering\n", autoFullPathname.wptr );
 
                         //
                         PrintTraceW ( L"Directory '%s'\n", FindFileData.cFileName );
 
                         //
                         //
-                        WCHAR *pSubPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-                        ZeroMemory ( pSubPathname, LEN_PATHNAME * sizeof(WCHAR) );
-                        wcscpy_s ( pSubPathname, LEN_PATHNAME / sizeof(WCHAR), pFullPathname );
-                        wcscat_s ( pSubPathname, LEN_PATHNAME / sizeof(WCHAR), L"\\" );
-                        wcscat_s ( pSubPathname, LEN_PATHNAME / sizeof(WCHAR), pInputFilename );
-                        wcscat_s ( pSubPathname, LEN_PATHNAME / sizeof(WCHAR), pInputExtension );
+                        AutoPtrW autoSubPathname ( LEN_PATHNAME );
+                        wcscpy_s ( autoSubPathname.wptr, LEN_PATHNAME / sizeof(WCHAR), autoFullPathname.wptr );
+                        wcscat_s ( autoSubPathname.wptr, LEN_PATHNAME / sizeof(WCHAR), L"\\" );
+                        wcscat_s ( autoSubPathname.wptr, LEN_PATHNAME / sizeof(WCHAR), autoInputFilename.wptr );
+                        wcscat_s ( autoSubPathname.wptr, LEN_PATHNAME / sizeof(WCHAR), autoInputExtension.wptr );
 
                         //
-                        bFoundOne |= deletePath ( pSubPathname, iLevel + 1 );
+                        bFoundOne |= deletePath ( autoSubPathname.wptr, iLevel + 1 );
 
                         //
-                        free ( pSubPathname );
-
-                        PrintVerboseW ( L"%s - Leaving\n", pFullPathname );
+                        PrintVerboseW ( L"%s - Leaving\n", autoFullPathname.wptr );
 
                     }
 
                     //
-                    free ( pFullPathname );
-                    free ( pPartialPathname );
 
                 }
 
@@ -1598,25 +1676,38 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
 
         }   //  INVALID_HANDLE_VALUE
 
-        free ( pDirectoryPathname );
-
     }   // Recursive
 
     //
     //  For Files And Directories
-    WCHAR *pSearchFilePathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-    ZeroMemory ( pSearchFilePathname, LEN_PATHNAME * sizeof(WCHAR) );
-    wcscpy_s ( pSearchFilePathname, LEN_PATHNAME, pInputDrive );
-    wcscat_s ( pSearchFilePathname, LEN_PATHNAME, pInputDirectory );
-    wcscat_s ( pSearchFilePathname, LEN_PATHNAME, pInputFilename );
-    wcscat_s ( pSearchFilePathname, LEN_PATHNAME, pInputExtension );
+    AutoPtrW autoSearchFilePathname ( LEN_PATHNAME );
+    wcscpy_s ( autoSearchFilePathname.wptr, LEN_PATHNAME, autoInputDrive.wptr );
+    wcscat_s ( autoSearchFilePathname.wptr, LEN_PATHNAME, autoInputDirectory.wptr );
+    wcscat_s ( autoSearchFilePathname.wptr, LEN_PATHNAME, autoInputFilename.wptr );
+    wcscat_s ( autoSearchFilePathname.wptr, LEN_PATHNAME, autoInputExtension.wptr );
 
     //  FILE_ATTRIBUTE_ENCRYPTED FILE_ATTRIBUTE_HIDDEN FILE_ATTRIBUTE_READONLY
     WIN32_FIND_DATA FindFileData;
 
     ZeroMemory ( &FindFileData, sizeof( FindFileData ) );
 
-    HANDLE hFileFind = FindFirstFile ( pSearchFilePathname, &FindFileData );
+    //
+    AutoPtrW    autoPrependFilename ( LEN_PATHNAME );
+    if ( wcsncmp ( autoSearchFilePathname.wptr, W_PREPEND_PREFIX, 2 ) != 0 )
+    {
+        wcscpy_s ( autoPrependFilename.wptr, LEN_PATHNAME, W_PREPEND_PREFIX );
+    }
+    wcscat_s ( autoPrependFilename.wptr, LEN_PATHNAME, autoSearchFilePathname.wptr );
+
+    //  Try With name
+    HANDLE hFileFind = FindFirstFile ( autoSearchFilePathname.wptr, &FindFileData );
+    if ( hFileFind == INVALID_HANDLE_VALUE )
+    {
+        //  Search with prepend name
+        hFileFind = FindFirstFile ( autoPrependFilename.wptr, &FindFileData );
+    }
+
+    //
     if ( hFileFind != INVALID_HANDLE_VALUE )
     {
         //
@@ -1640,26 +1731,24 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
 
             //
             //  Set Full Pathname
-            WCHAR *pPartialPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-            ZeroMemory ( pPartialPathname, LEN_PATHNAME * sizeof(WCHAR) );
-            wcscpy_s ( pPartialPathname, LEN_PATHNAME, pInputDrive );
-            wcscat_s ( pPartialPathname, LEN_PATHNAME, pInputDirectory );
-            wcscat_s ( pPartialPathname, LEN_PATHNAME, FindFileData.cFileName );
+            AutoPtrW autoPartialPathname ( LEN_PATHNAME );
+            wcscpy_s ( autoPartialPathname.wptr, LEN_PATHNAME, autoInputDrive.wptr );
+            wcscat_s ( autoPartialPathname.wptr, LEN_PATHNAME, autoInputDirectory.wptr );
+            wcscat_s ( autoPartialPathname.wptr, LEN_PATHNAME, FindFileData.cFileName );
 
-            PrintTraceW ( L"Found Partial Pathname '%s'\n", pPartialPathname );
+            PrintTraceW ( L"Found Partial Pathname '%s'\n", autoPartialPathname.wptr );
 
             //
-            WCHAR *pFullPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-            ZeroMemory ( pFullPathname, LEN_PATHNAME * sizeof(WCHAR) );
+            AutoPtrW autoFullPathname ( LEN_PATHNAME );
 
             //
             //  Get Full Pathname from Partial Pathname
             LPWSTR lpFilepart = NULL;
-            DWORD dwResult = GetFullPathName ( pPartialPathname, LEN_PATHNAME, pFullPathname, &lpFilepart );
+            DWORD dwResult = GetFullPathName ( autoPartialPathname.wptr, LEN_PATHNAME, autoFullPathname.wptr, &lpFilepart );
             if ( dwResult > 0 )
             {
                 //
-                BOOL bFreeCluster = getFreeCluster ( pFullPathname );
+                BOOL bFreeCluster = getFreeCluster ( autoFullPathname.wptr );
 
                 //
                 if ( bCheckCluster )
@@ -1670,7 +1759,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                     {
                         ZeroMemory ( lpVolumeLcnInfo, sizeof ( VOLUME_DISK_INFO )  );
 
-                        BOOL bResult = GetVolumeDiskInfo ( pFullPathname, lpVolumeLcnInfo );
+                        BOOL bResult = GetVolumeDiskInfo ( autoFullPathname.wptr, lpVolumeLcnInfo );
                         if ( ! bResult )
                         {
                             lpVolumeLcnInfo->BytesPerSector         = dwBytePerSector;
@@ -1688,18 +1777,18 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                     PrintTraceW ( L"deletePath - Filename '%s'\n", FindFileData.cFileName );
 
                     //
-                    displayFileInfo ( pFullPathname, &FindFileData );
+                    displayFileInfo ( autoFullPathname.wptr, &FindFileData );
 
                     //
                     //  Delete for A File
-                    BOOL doDelete = AskConfirmQuestionForPathname ( pFullPathname );
+                    BOOL doDelete = AskConfirmQuestionForPathname ( autoFullPathname.wptr );
                     if ( doDelete )
                     {
                         //
                         //  Change Flage
                         if ( bOverwrite )
                         {
-                            changeAttributes ( pFullPathname, FindFileData.dwFileAttributes );
+                            changeAttributes ( autoFullPathname.wptr, FindFileData.dwFileAttributes );
                         }
 
                         //
@@ -1714,7 +1803,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                             {
                                 ZeroMemory ( lpFileLcnBefore, iFileLcnSize );
 
-                                HANDLE hCheckFile = OpenBitmapAndCreateMapping ( pFullPathname );
+                                HANDLE hCheckFile = OpenBitmapAndCreateMapping ( autoFullPathname.wptr );
                                 if ( hCheckFile != INVALID_HANDLE_VALUE )
                                 {
                                     BOOL bGetOffset = GetFileOffset ( hCheckFile, lpVolumeLcnInfo, lpFileLcnBefore, iFileLcnMax );
@@ -1729,7 +1818,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                             }
                             else
                             {
-                                bWriteOver = writeOverFile ( pFullPathname, &FindFileData );
+                                bWriteOver = writeOverFile ( autoFullPathname.wptr, &FindFileData );
                             }
 
                             //
@@ -1738,7 +1827,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                             {
                                 ZeroMemory ( lpFileLcnAfter, iFileLcnSize );
 
-                                HANDLE hCheckFile = OpenBitmapAndCreateMapping ( pFullPathname );
+                                HANDLE hCheckFile = OpenBitmapAndCreateMapping ( autoFullPathname.wptr );
                                 if ( hCheckFile != INVALID_HANDLE_VALUE )
                                 {
                                     BOOL bGetOffset = GetFileOffset ( hCheckFile, lpVolumeLcnInfo, lpFileLcnAfter, iFileLcnMax );
@@ -1753,7 +1842,7 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                         //
                         if ( bWriteOver )
                         {
-                            renameAndDelete ( pFullPathname, FALSE );
+                            renameAndDelete ( autoFullPathname.wptr, FALSE );
                         }
                     }
                 }
@@ -1768,45 +1857,42 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                     //  Is the flag subdirectory specified
                     if ( bSubDirectory )
                     {
-                        PrintVerboseW ( L"%s - Entering\n", pFullPathname );
+                        PrintVerboseW ( L"%s - Entering\n", autoFullPathname.wptr );
 
                         //
                         PrintTraceW ( L"Directory '%s'\n", FindFileData.cFileName );
 
                         //
                         //
-                        WCHAR *pSubPathname = ( WCHAR * ) malloc ( LEN_PATHNAME * sizeof(WCHAR) );
-                        ZeroMemory ( pSubPathname, LEN_PATHNAME * sizeof(WCHAR) );
-                        wcscpy_s ( pSubPathname, LEN_PATHNAME / sizeof(WCHAR), pFullPathname );
-                        wcscat_s ( pSubPathname, LEN_PATHNAME / sizeof(WCHAR), L"\\*.*" );
+                        AutoPtrW autoSubPathname ( LEN_PATHNAME );
+                        wcscpy_s ( autoSubPathname.wptr, LEN_PATHNAME / sizeof(WCHAR), autoFullPathname.wptr );
+                        wcscat_s ( autoSubPathname.wptr, LEN_PATHNAME / sizeof(WCHAR), L"\\*.*" );
 
                         //
                         //      Recurse Directory
-                        deletePath ( pSubPathname, iLevel + 1 );
+                        deletePath ( autoSubPathname.wptr, iLevel + 1 );
 
                         //
-                        free ( pSubPathname );
-
-                        PrintVerboseW ( L"%s - Leaving\n", pFullPathname );
+                        PrintVerboseW ( L"%s - Leaving\n", autoFullPathname.wptr );
 
                     }
 
                     //
-                    displayFileInfo ( pFullPathname, &FindFileData );
+                    displayFileInfo ( autoFullPathname.wptr, &FindFileData );
 
                     //
                     //  Delete for a Directory
-                    BOOL doDelete = AskConfirmQuestionForPathname ( pFullPathname );
+                    BOOL doDelete = AskConfirmQuestionForPathname ( autoFullPathname.wptr );
                     if ( doDelete )
                     {
                         //
                         //  Change Flage
                         if ( bOverwrite )
                         {
-                            changeAttributes ( pFullPathname, FindFileData.dwFileAttributes );
+                            changeAttributes ( autoFullPathname.wptr, FindFileData.dwFileAttributes );
                         }
 
-                        renameAndDelete ( pFullPathname, TRUE );
+                        renameAndDelete ( autoFullPathname.wptr, TRUE );
                     }
                 }
 
@@ -1817,8 +1903,6 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
                 //  Split Fails
             }
 
-            free ( pFullPathname );
-            free ( pPartialPathname );
 
             //
             bFound = FindNextFile ( hFileFind, &FindFileData );
@@ -1829,12 +1913,6 @@ BOOL deletePath ( const WCHAR *lpPathname, int iLevel )
     }
 
     //
-    free ( pInputDrive );
-    free ( pInputDirectory );
-    free ( pInputFilename );
-    free ( pInputExtension );
-    free ( pSearchFilePathname );
-
     if ( iLevel == 0 && ! bFoundOne )
     {
         PrintStderrW ( L"Error - '%s' Not Found\n", lpPathname );
