@@ -72,6 +72,7 @@ class AutoPtrW
             wptr = NULL;
         }
 
+        //  Allocate len * sizeof(WCHAR)
         AutoPtrW ( size_t len )
         {
             this->wlen  = len;
@@ -109,6 +110,7 @@ class AutoPtrA
             ptr = NULL;
         }
 
+        //  Allocate len
         AutoPtrA ( size_t len )
         {
             this->len   = len;
