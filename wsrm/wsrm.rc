@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,15,016
- PRODUCTVERSION 1,0,15,016
+ FILEVERSION 1,0,15,018
+ PRODUCTVERSION 1,0,15,018
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -70,15 +70,15 @@ BEGIN
             VALUE "Comments", "mailto:ian.macallan@gmail.com\0"
             VALUE "CompanyName", "Macallan (c)\0"
             VALUE "FileDescription", "wsrm - (MSVC)\0"
-            VALUE "FileVersion", "1.0.15.016\0"
+            VALUE "FileVersion", "1.0.15.018\0"
             VALUE "InternalName", "https://www.macallan.org/\0"
-            VALUE "LegalCopyright", "Copyright (C) Sat May 24 16:26, 2025\0"
+            VALUE "LegalCopyright", "Copyright (C) Thu Nov 13 10:04, 2025\0"
             VALUE "LegalTrademarks", "Author: Ian Macallan\0"
             VALUE "OriginalFilename", ORIGINAL_FILENAME
-            VALUE "PrivateBuild", "200\0"
+            VALUE "PrivateBuild", "202\0"
             VALUE "ProductName", PRODUCT_NAME
-            VALUE "ProductVersion", "1.0.15.016\0"
-            VALUE "SpecialBuild", "200\0"
+            VALUE "ProductVersion", "1.0.15.018\0"
+            VALUE "SpecialBuild", "202\0"
         END
     END
     BLOCK "VarFileInfo"
