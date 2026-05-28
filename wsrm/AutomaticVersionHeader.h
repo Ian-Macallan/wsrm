@@ -5,7 +5,7 @@
 //
 //	(c) 2003 - 2026 Macallan - mailto:ian.macallan@gmail.com
 //
-//	Generated : 24/01/2026 13:24:32
+//	Generated : 28/05/2026 13:14:32
 //
 //===========================================================================================
 //
@@ -57,22 +57,22 @@
 #endif
 
 #ifdef UNICODE
-#define PROGRAM_DATE    L"Sat Jan 24 13:24"
-#define PROGRAM_DATE_F  L"Sat Jan 24 13:24 2026"
+#define PROGRAM_DATE    L"Thu May 28 13:14"
+#define PROGRAM_DATE_F  L"Thu May 28 13:14 2026"
 #define PROGRAM_YEAR    L"2026"
-#define PROGRAM_TIME    L"2026/01/24 13:24:32"
+#define PROGRAM_TIME    L"2026/05/28 13:14:32"
 #else
-#define PROGRAM_DATE    "Sat Jan 24 13:24"
-#define PROGRAM_DATE_F  "Sat Jan 24 13:24 2026"
+#define PROGRAM_DATE    "Thu May 28 13:14"
+#define PROGRAM_DATE_F  "Thu May 28 13:14 2026"
 #define PROGRAM_YEAR    "2026"
-#define PROGRAM_TIME    "2026/01/24 13:24:32"
+#define PROGRAM_TIME    "2026/05/28 13:14:32"
 #endif
 
 #ifdef UNICODE
-#define PROGRAM_VERSION L"1.0.15.019"
-#define PROGRAM_INSTALL L"1.0.15019"
-#define PROGRAM_VER_NUM 10015019
-#define PROGRAM_BUILD   L"203"
+#define PROGRAM_VERSION L"1.0.16.001"
+#define PROGRAM_INSTALL L"1.0.16001"
+#define PROGRAM_VER_NUM 10016001
+#define PROGRAM_BUILD   L"204"
 #define PROGRAM_TITLE   L"wsrm"
 #ifdef _WIN64
 #define PROGRAM_TITLE_P L"wsrm (x64 Unicode)"
@@ -80,10 +80,10 @@
 #define PROGRAM_TITLE_P L"wsrm (x86 Unicode)"
 #endif
 #else
-#define PROGRAM_VERSION "1.0.15.019"
-#define PROGRAM_INSTALL "1.0.15019"
-#define PROGRAM_VER_NUM 10015019
-#define PROGRAM_BUILD   "203"
+#define PROGRAM_VERSION "1.0.16.001"
+#define PROGRAM_INSTALL "1.0.16001"
+#define PROGRAM_VER_NUM 10016001
+#define PROGRAM_BUILD   "204"
 #define PROGRAM_TITLE   "wsrm"
 #ifdef _WIN64
 #define PROGRAM_TITLE_P "wsrm (x64 MBCS)"
